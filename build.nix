@@ -15,7 +15,7 @@
             hlint = { };
           };
 
-          buildInputs = [ pkgs.purus ];
+          buildInputs = [ pkgs.purs pkgs.purus ];
 
           shellHook = config.pre-commit.installationScript;
 

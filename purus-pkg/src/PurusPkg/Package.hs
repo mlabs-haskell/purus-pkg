@@ -1,5 +1,6 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 {- | Module: PurusPkg.Package
 
@@ -15,10 +16,14 @@ import Data.Coerce qualified as Coerce
 import Data.SemVer qualified as SemVer
 import Data.SemVer.Constraint qualified as SemVer.Constraint
 
+-- | 'Name' is the name of a package (just to serve as documentation)
+type Name = Text
+
+-- | 'Package' type which defines a package
 data Package = Package
-  { pName :: Text
+  { pName :: Name
   , pVersion :: Version
-  , pDependencies :: Map Text VersionConstraint
+  , pDependencies :: Map Name VersionConstraint
   }
   deriving stock (Eq, Show)
 
@@ -41,8 +46,14 @@ instance Aeson.ToJSON Package where
 newtype Version = Version SemVer.Version
   deriving newtype (Eq, Ord, Show)
 
+versionToText :: Version -> Text
+versionToText = SemVer.toText . Coerce.coerce
+
+versionFromText :: Text -> Either String Version
+versionFromText = Coerce.coerce . SemVer.fromText
+
 instance Aeson.ToJSON Version where
-  toJSON version = Aeson.toJSON $ SemVer.toText $ Coerce.coerce version
+  toJSON = Aeson.toJSON . versionToText
 
 instance Aeson.FromJSON Version where
   parseJSON =
@@ -54,7 +65,20 @@ instance Aeson.FromJSON Version where
       )
 
 newtype VersionConstraint = VersionConstraint SemVer.Constraint.Constraint
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Ord, Show)
+
+-- TODO(jaredponn) February 5, 2025: we need this Ord instance to have sets of
+-- constraints, so we just orphan it for now s.t. we can use automatic deriving
+-- to write it for us
+deriving stock instance Ord SemVer.Constraint.Constraint
+
+{- | returns true iff the provided 'Version' satisfies all the given
+'VersionConstraint's
+-}
+versionSatisfiesVersionConstraints :: Version -> [VersionConstraint] -> Bool
+versionSatisfiesVersionConstraints (Version version) versionConstraints =
+  all (SemVer.Constraint.satisfies version) $
+    map (\(VersionConstraint versionConstraint) -> versionConstraint) versionConstraints
 
 instance Aeson.ToJSON VersionConstraint where
   toJSON versionConstraint = Aeson.toJSON $ SemVer.Constraint.toText $ Coerce.coerce versionConstraint
