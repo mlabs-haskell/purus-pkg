@@ -1,0 +1,10 @@
+packages: .
+
+-- NOTE(jaredponn) February 1, 2025: package for semantic versioning on git has
+-- more features than the same version uploaded on Hackage seems 
+source-repository-package
+    type: git
+    location: https://github.com/brendanhay/semver
+    tag: 540990acfd2d4aaffa17a8337cbfa9a38cb3f2aa
+    --sha256: sha256-PH1lPV6goV6I6DFcX/RPr3oTTHB9tz4HtPoKArK9hHY=
+
