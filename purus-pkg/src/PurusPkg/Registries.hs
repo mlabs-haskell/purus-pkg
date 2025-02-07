@@ -113,10 +113,6 @@ queryPackageSources registries name version destination =
         LocalRegistry {lrFilePath = localRegistryFilePath, lrMapping = LocalRegistryMapping localRegistryMapping} -> case Map.lookup (name, version) localRegistryMapping of
           Just reference -> case reference of
             FileReference filepath ->
-              -- NOTE(jaredponn) February 2, 2025: Well, in the common package
-              -- \*directory*, there's an issue of @cp -r@ not existing. See issue
-              -- 160 <https://github.com/haskell/directory/issues/160>; so we
-              -- just use @cp@.
               Process.callProcess "ln" ["-sfn", filepath, destination] `Exception.catch` \err ->
                 Exception.throwIO
                   registryBadLookup
