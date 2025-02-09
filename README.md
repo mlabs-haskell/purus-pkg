@@ -12,12 +12,13 @@ A *package* contains:
 
 - A file `./package.json` which contains the above information.
 
-- Source files for the package `*.purs`.
+- Source files for the package of the form `*.purs`.
 
-Then, the executable `purus-pkg`, when given a list of *registries* (a *registry* is
-a mapping from a package name and version to the package sources), it finds
-a set of packages (where the names are unique) which satisfy all the version
-constraints of each package.
+The executable `purus-pkg`, when given a list of *registries* (a *registry* is
+a mapping from a package name and version to the package sources), will find a
+set of packages (where the names are unique) which contain at least all names
+in the dependencies, and satisfy all the version constraints of each package in
+the transitive reflexive closure of the dependencies of the `./package.json`.
 
 This has the implication that given packages `A`,`B`,`C`, and `D` with a
 dependency tree as follows (an arrow from a package to another denotes the
@@ -58,21 +59,21 @@ learn more about [Nix flakes](https://zero-to-nix.com/concepts/flakes/).
 `purus-pkg` is the executable for the package manager.
 
 - `purus-pkg install` will find satisfying versions (from the provided
-  registries) and install the versions in the `purus-modules` folder
+  registries) and install the versions in the `purus-modules/` folder.
 
-- `purus-pkg build` will call `purus purus-modules/` to compile the project
+- `purus-pkg build` will call `purus purus-modules/` to compile the project.
 
 ### Registries
 
 `purus-pkg` looks for the dependencies by looking in the provided registries.
-In the case that multiple registries provide the same name and version, the
-rightmost package takes precedence e.g. the following means `registry2.json`
-takes precedence over `registry1.json`.
+In the case that multiple registries provide the same name and version of a
+package, the rightmost package takes precedence e.g. the following means
+`/path/to/registry2.json` takes precedence over `/path/to/registry1.json`.
 
 ```bash
 $ purus-pkg install \
-    --local-registry /registry1.json \
-    --local-registry /registry2.json
+    --local-registry /path/to/registry1.json \
+    --local-registry /path/to/registry2.json
 ```
 
 #### Local registries 
