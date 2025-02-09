@@ -84,6 +84,7 @@ library
         semver,
         directory,
         process,
+        mtl,
         optparse-applicative,
 
     -- Directories containing source files.
@@ -150,3 +151,5 @@ test-suite purus-pkg-test
         containers,
         tasty,
         tasty-quickcheck,
+        tasty-hunit,
+        mtl,

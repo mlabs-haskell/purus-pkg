@@ -32,7 +32,7 @@ main =
         either (Exception.throwIO . Aeson.AesonException) return eitherResult
 
       -- run the solver to get the dependencies
-      dependencies <- PurusPkg.Solver.solver currentPackage registries
+      dependencies <- PurusPkg.Solver.runSolverIO (PurusPkg.Solver.solver currentPackage) registries
 
       -- create the directory of dependencies
       PurusPkg.Solver.createPurusModules dependencies registries

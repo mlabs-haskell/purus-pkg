@@ -7,7 +7,7 @@
  Provides functionality and types for solving the version constraints, along
  with creating the final aggregated collection of the solved versions' sources.
 -}
-module PurusPkg.Solver (solver, createPurusModules, purusModulesDirectory) where
+module PurusPkg.Solver (solver, MonadSolver (queryPackage, querySatisfyingVersions), SolverIO, runSolverIO, createPurusModules, purusModulesDirectory, NoSatisfyingVersion) where
 
 import PurusPkg.Package (Name, Package (pDependencies), Version, VersionConstraint)
 import PurusPkg.Package qualified as Package
@@ -28,6 +28,13 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
 
+import Control.Monad.Except (ExceptT, MonadError)
+import Control.Monad.Except qualified as Except
+import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Reader (MonadReader, ReaderT)
+import Control.Monad.Reader qualified as Reader
+
+-- | Error for 'MonadSolver'
 data NoSatisfyingVersion = NoSatisfyingVersion {nvName :: Name, nvConstraints :: [VersionConstraint]}
   deriving stock (Eq, Show)
 
@@ -38,8 +45,43 @@ instance Exception NoSatisfyingVersion where
       ++ " given constraints "
       ++ show constraints -- TODO(jaredponn): pretty show the constraints later
 
-solver :: Package -> Registries -> IO (Map Name Version)
-solver package registries = do
+{- | 'MonadSolver' isolates the key points of how 'solver' may be
+parameterized.
+
+In particular, 'querySatisfyingVersions' returns all the satisfying versions
+of a name and set of 'VersionConstraint', and 'queryPackage' must return the
+'Package' corresponding to a name and version.
+-}
+class (MonadError NoSatisfyingVersion m) => MonadSolver m where
+  queryPackage :: Name -> Version -> m Package
+  querySatisfyingVersions :: Name -> Set VersionConstraint -> m (Set (Name, Down Version))
+
+-- | An instance of 'MonadSolver' using 'PurusPkg.Registries'
+newtype SolverIO a = SolverIO (ReaderT Registries (ExceptT NoSatisfyingVersion IO) a)
+  deriving newtype (Functor, Applicative, Monad, MonadReader Registries, MonadError NoSatisfyingVersion, MonadIO)
+
+{- |  Unwraps a 'SolverIO' to the underlying 'IO' monad -- throwing an exception
+in the case that the solver could not find a satisfying version.
+-}
+runSolverIO :: SolverIO a -> Registries -> IO a
+runSolverIO (SolverIO readerExceptIO) registries = do
+  let exceptIO = Reader.runReaderT readerExceptIO registries
+  eitherResult <- Except.runExceptT exceptIO
+  case eitherResult of
+    Left err -> Exception.throwIO err
+    Right result -> return result
+
+instance MonadSolver SolverIO where
+  queryPackage name version = do
+    registries <- Reader.ask
+    Reader.liftIO $ Registries.queryRegistriesPackage registries name version
+
+  querySatisfyingVersions name versionConstraints = do
+    registries <- Reader.ask
+    Reader.liftIO $ Registries.queryRegistriesSatisfyingVersions registries name versionConstraints
+
+solver :: (MonadSolver m) => Package -> m (Map Name Version)
+solver package = do
   let
     -- NOTE(jaredponn): this is NP complete, so it's reasonable to believe
     -- the best we can do is brute force with heuristics.
@@ -93,7 +135,7 @@ solver package registries = do
     --
     -- TODO(jaredponn): do some sort of heuristics to make this faster..
     -- its the best we can do
-    go :: Map Name Version -> Map Name (Set VersionConstraint) -> IO (Either NoSatisfyingVersion (Map Name Version))
+    go :: (MonadSolver m) => Map Name Version -> Map Name (Set VersionConstraint) -> m (Map Name Version)
     go satisfyingVersions dependenciesToSatisfy =
       -- Either we have
       --    1. no dependencies left to satisfy, so we're done
@@ -101,10 +143,10 @@ solver package registries = do
       --       satisfy that dependency..
       case Map.minViewWithKey dependenciesToSatisfy of
         -- 1.
-        Nothing -> return $ Right satisfyingVersions
+        Nothing -> return satisfyingVersions
         -- 2.
         Just ((name, versionConstraints), remainingDependenciesToSatisfy) ->
-          let errorNoSatisfyingVersion = Left NoSatisfyingVersion {nvName = name, nvConstraints = Set.toList versionConstraints}
+          let errorNoSatisfyingVersion = Except.throwError NoSatisfyingVersion {nvName = name, nvConstraints = Set.toList versionConstraints}
            in -- So given a dependency (name and version constraint pair),
               -- we've either:
               --  2.1. already chose the dependency (name) previously, and
@@ -118,14 +160,14 @@ solver package registries = do
                 Just version ->
                   if Package.versionSatisfiesVersionConstraints version $ Set.toList versionConstraints
                     then go satisfyingVersions remainingDependenciesToSatisfy
-                    else return errorNoSatisfyingVersion
+                    else errorNoSatisfyingVersion
                 -- 2.2.
                 Nothing ->
-                  fmap Set.toList (Registries.querySatisfyingVersions registries name versionConstraints)
+                  fmap Set.toList (querySatisfyingVersions name versionConstraints)
                     >>= \versions ->
                       foldr
                         ( \candidateVersion acc -> do
-                            candidatePackage <- Registries.queryPackage registries name candidateVersion
+                            candidatePackage <- queryPackage name candidateVersion
 
                             let candidateDependencies = pDependencies candidatePackage
                             -- since we're adding new dependencies (from
@@ -139,24 +181,21 @@ solver package registries = do
                                     maybe True (Package.versionSatisfiesVersionConstraints chosenPackageVersion . List.singleton) $ Map.lookup chosenPackageName candidateDependencies
                                 )
                               $ Map.toList satisfyingVersions
-                              then return errorNoSatisfyingVersion
-                              else do
-                                eitherSolved <-
-                                  go
-                                    (Map.union satisfyingVersions $ Map.singleton name candidateVersion)
-                                    $ Map.unionWith
+                              then errorNoSatisfyingVersion
+                              else
+                                go
+                                  (Map.union satisfyingVersions $ Map.singleton name candidateVersion)
+                                  ( Map.unionWith
                                       Set.union
                                       remainingDependenciesToSatisfy
-                                    $ Map.map Set.singleton candidateDependencies
-
-                                either (const acc) (return . Right) eitherSolved
+                                      $ Map.map Set.singleton candidateDependencies
+                                  )
+                                  `Except.catchError` const acc
                         )
-                        (return errorNoSatisfyingVersion)
+                        errorNoSatisfyingVersion
                         $ map (getDown . snd) versions
 
-  eitherSatisfyingVersions <- go mempty $ Map.map Set.singleton $ pDependencies package
-
-  satisfyingVersions <- either Exception.throwIO return eitherSatisfyingVersions
+  satisfyingVersions <- go mempty $ Map.map Set.singleton $ pDependencies package
 
   return satisfyingVersions
 
@@ -170,4 +209,4 @@ createPurusModules dependencies registries = do
     Foldable.for_ (Map.toList dependencies) $
       \(name, version) -> do
         let path = Text.unpack $ name <> "-" <> Package.versionToText version
-        Registries.queryPackageSources registries name version path
+        Registries.queryRegistriesPackageSources registries name version path

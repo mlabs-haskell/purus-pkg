@@ -4,9 +4,20 @@
 
 {- | Module: PurusPkg.Package
 
-Exposes the package type
+Exposes the package type and related functionality
 -}
-module PurusPkg.Package where
+module PurusPkg.Package (
+  Package (..),
+  Name,
+  Version (..),
+  VersionConstraint (..),
+  versionToText,
+  versionFromText,
+  versionSatisfiesVersionConstraints,
+  versionConstraintToText,
+  versionConstraintFromText,
+)
+where
 
 import Data.Aeson qualified as Aeson
 import Data.Map (Map)
@@ -80,14 +91,20 @@ versionSatisfiesVersionConstraints (Version version) versionConstraints =
   all (SemVer.Constraint.satisfies version) $
     map (\(VersionConstraint versionConstraint) -> versionConstraint) versionConstraints
 
+versionConstraintToText :: VersionConstraint -> Text
+versionConstraintToText = SemVer.Constraint.toText . Coerce.coerce
+
+versionConstraintFromText :: Text -> Either String VersionConstraint
+versionConstraintFromText = Coerce.coerce . SemVer.Constraint.fromText
+
 instance Aeson.ToJSON VersionConstraint where
-  toJSON versionConstraint = Aeson.toJSON $ SemVer.Constraint.toText $ Coerce.coerce versionConstraint
+  toJSON = Aeson.toJSON . versionConstraintToText
 
 instance Aeson.FromJSON VersionConstraint where
   parseJSON =
     Aeson.withText
       "VersionConstraint"
-      ( \text -> case fmap Coerce.coerce . SemVer.Constraint.fromText $ text of
+      ( \text -> case versionConstraintFromText text of
           Left err -> fail err
           Right result -> return result
       )

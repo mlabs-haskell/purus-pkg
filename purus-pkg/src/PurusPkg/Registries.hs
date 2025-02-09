@@ -10,9 +10,9 @@ table to lookup package sources associated with a name and a version.
 module PurusPkg.Registries (
   Registries (..),
   Registry (..),
-  queryPackage,
-  queryPackageSources,
-  querySatisfyingVersions,
+  queryRegistriesPackage,
+  queryRegistriesPackageSources,
+  queryRegistriesSatisfyingVersions,
   LocalRegistryMapping (..),
   LocalRegistryReference (..),
   packageFilePath,
@@ -69,8 +69,8 @@ packageFilePath = "package.json"
 {- | Given a 'Registry', 'Name', and 'Version', this queries the corresponding
 'Package'.
 -}
-queryPackage :: Registries -> Name -> Version -> IO Package
-queryPackage registries name version =
+queryRegistriesPackage :: Registries -> Name -> Version -> IO Package
+queryRegistriesPackage registries name version =
   let
     -- template for errors
     registryBadLookup = RegistryBadLookup {rblName = name, rblVersion = version, rblMessage = ""}
@@ -98,8 +98,8 @@ queryPackage registries name version =
 sources corresponding to the 'Name' and 'Version' into the provided
 'FilePath'
 -}
-queryPackageSources :: Registries -> Name -> Version -> FilePath -> IO ()
-queryPackageSources registries name version destination =
+queryRegistriesPackageSources :: Registries -> Name -> Version -> FilePath -> IO ()
+queryRegistriesPackageSources registries name version destination =
   let
     -- template for errors
     registryBadLookup = RegistryBadLookup {rblName = name, rblVersion = version, rblMessage = ""}
@@ -127,8 +127,8 @@ queryPackageSources registries name version destination =
 {- | 'querySatisfyingVersions' queries all the available versions in the registry
 satisfying the given version constraints
 -}
-querySatisfyingVersions :: Registries -> Name -> Set VersionConstraint -> IO (Set (Name, Down Version))
-querySatisfyingVersions registries name versionConstraints =
+queryRegistriesSatisfyingVersions :: Registries -> Name -> Set VersionConstraint -> IO (Set (Name, Down Version))
+queryRegistriesSatisfyingVersions registries name versionConstraints =
   let
     go :: Registry -> IO (Set (Name, Down Version)) -> IO (Set (Name, Down Version))
     go registry acc = case registry of
