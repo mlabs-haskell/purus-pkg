@@ -5,6 +5,7 @@ table to lookup package sources associated with a name and a version.
 
  -}
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module PurusPkg.Registries (
@@ -189,14 +190,16 @@ instance Aeson.ToJSON Registry
 instance Aeson.FromJSON Registry
 
 newtype LocalRegistryMapping = LocalRegistryMapping {getLocalRegistryMapping :: Map (Text, Version) LocalRegistryReference}
-  deriving newtype (Aeson.ToJSON, Aeson.FromJSON)
+  deriving (Aeson.ToJSON, Aeson.FromJSON) via (Map (Text, Version) LocalRegistryReference)
 
 -- | A reference to how one can get a package
 data LocalRegistryReference
   = FileReference FilePath
+  -- TODO(jaredponn) February 2, 2025: this will be a feature implemented
+  -- later.
+  -- > | GitReference String
   deriving
-    ( -- | GitReference String
-      Generic
+    ( Generic
     )
 
 instance Aeson.ToJSON LocalRegistryReference
