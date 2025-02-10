@@ -54,6 +54,10 @@ Notice that this requires Nix, for an introduction to the Nix ecosystem, check
 out [Zero to Nix.](https://zero-to-nix.com/concepts/flakes/), in particular
 learn more about [Nix flakes](https://zero-to-nix.com/concepts/flakes/).
 
+The template provides the Nix machinery to load `purus-pkg` with a registry to
+fetch packages, and it provides a `Makefile` to orchestrate `purus-pkg` with
+the compilation to UPLC.
+
 ## `purus-pkg`
 
 `purus-pkg` is the executable for the package manager.
@@ -78,4 +82,5 @@ $ purus-pkg install \
 
 #### Local registries 
 
-The tool `purus-pkg-local-registry` allows one to create local registries.
+The tool `purus-pkg-local-registry` is a convenient wrapper to create JSON
+objects of the right form for local registries.

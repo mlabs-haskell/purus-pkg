@@ -1,5 +1,5 @@
 {
-  description = "Example flake to develop with Purus";
+  description = "Example flake to develop with Purus with purus-pkg";
 
   inputs = {
     nixpkgs.follows = "purus-pkg/nixpkgs";
@@ -15,7 +15,10 @@
       devShells = eachSystem (system:
         let
           pkgs = import nixpkgs {
-            overlays = [ purus-pkg.overlays.default ];
+            overlays = [
+              # Overlay to provide the dependencies necessary for purus
+              purus-pkg.overlays.default
+            ];
             inherit system;
           };
         in {
@@ -33,4 +36,3 @@
         });
     };
 }
-
