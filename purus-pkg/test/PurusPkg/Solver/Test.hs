@@ -5,6 +5,7 @@ module PurusPkg.Solver.Test where
 
 import Control.Exception qualified as Exception
 import Data.Coerce qualified as Coerce
+import Data.Functor.Identity (Identity)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Maybe qualified as Maybe
@@ -16,19 +17,19 @@ import Test.Tasty.HUnit qualified
 
 import PurusPkg.Package (Package (Package, pDependencies, pName, pVersion), Version (Version), VersionConstraint (VersionConstraint))
 import PurusPkg.Package qualified
-import PurusPkg.Solver (MonadSolver, NoSatisfyingVersion)
+import PurusPkg.Solver (MonadSolver, NoSatisfyingVersion, SolverT (SolverT))
 import PurusPkg.Solver qualified
 
-import Control.Monad.Except (Except, MonadError)
+import Control.Monad.Except (MonadError)
 import Control.Monad.Except qualified as Except
-import Control.Monad.Reader (MonadReader, ReaderT)
+import Control.Monad.Reader (MonadReader)
 import Control.Monad.Reader qualified as Reader
 
 import Data.SemVer qualified as SemVer
 import Data.SemVer.Constraint qualified as SemVer.Constraint
 import Data.Text (Text)
 
--- | A mock data type for the registry for 'MockSolver'
+-- | A mock data type for the registry for 'SolverMock'
 newtype MockRegistry = MockRegistry {getMockRegistry :: Map (Text, Version) Package}
   deriving newtype (Show, Eq)
 
@@ -40,13 +41,13 @@ makeMockRegistryPackage name version dependencies =
   )
 
 -- | An instance of 'MonadSolver' for mocking up tests
-newtype MockSolver a = MockSolver (ReaderT MockRegistry (Except NoSatisfyingVersion) a)
+newtype SolverMock a = SolverMock (SolverT MockRegistry Identity a)
   deriving newtype (Functor, Applicative, Monad, MonadReader MockRegistry, MonadError NoSatisfyingVersion)
 
-runMockSolver :: MockSolver a -> MockRegistry -> Either NoSatisfyingVersion a
-runMockSolver (MockSolver mockSolver) mockRegistry = Except.runExcept (Reader.runReaderT mockSolver mockRegistry)
+runSolverMock :: SolverMock a -> MockRegistry -> Either NoSatisfyingVersion a
+runSolverMock (SolverMock (SolverT mockSolver)) mockRegistry = Except.runExcept (Reader.runReaderT mockSolver mockRegistry)
 
-instance MonadSolver MockSolver where
+instance MonadSolver SolverMock where
   queryPackage name version = do
     mockRegistry <- Reader.ask
     case Map.lookup (name, version) $ getMockRegistry mockRegistry of
@@ -137,7 +138,7 @@ solvableUnitTests =
                 , makeMockRegistryPackage "C" (Version (SemVer.version 2 0 0 [] [])) mempty
                 , makeMockRegistryPackage "C" (Version (SemVer.version 3 0 0 [] [])) mempty
                 ]
-          eitherResult = runMockSolver (PurusPkg.Solver.solver package) mockRegistry
+          eitherResult = runSolverMock (PurusPkg.Solver.solver package) mockRegistry
        in Test.Tasty.HUnit.testCase "Package and MockRegistry should be satisfied 1" $ do
             chosenDependencies <- either Exception.throwIO return eitherResult
             Test.Tasty.HUnit.assertBool "Packages are not satisfied" $ checkDependencies chosenDependencies package mockRegistry
@@ -177,7 +178,7 @@ solvableUnitTests =
                     Map.fromList
                       []
                 ]
-          eitherResult = runMockSolver (PurusPkg.Solver.solver package) mockRegistry
+          eitherResult = runSolverMock (PurusPkg.Solver.solver package) mockRegistry
        in Test.Tasty.HUnit.testCase "Package and MockRegistry should be satisfied 2" $ do
             chosenDependencies <- either Exception.throwIO return eitherResult
             Test.Tasty.HUnit.assertEqual
@@ -223,7 +224,7 @@ solvableUnitTests =
                     Map.fromList
                       []
                 ]
-          eitherResult = runMockSolver (PurusPkg.Solver.solver package) mockRegistry
+          eitherResult = runSolverMock (PurusPkg.Solver.solver package) mockRegistry
        in Test.Tasty.HUnit.testCase "Package and MockRegistry should be satisfied 3" $ do
             chosenDependencies <- either Exception.throwIO return eitherResult
             Test.Tasty.HUnit.assertEqual
@@ -269,7 +270,7 @@ unsolvableUnitTests =
                 , makeMockRegistryPackage "C" (Version (SemVer.version 2 0 0 [] [])) mempty
                 , makeMockRegistryPackage "C" (Version (SemVer.version 3 0 0 [] [])) mempty
                 ]
-          eitherResult = runMockSolver (PurusPkg.Solver.solver package) mockRegistry
+          eitherResult = runSolverMock (PurusPkg.Solver.solver package) mockRegistry
        in Test.Tasty.HUnit.testCase "Package and MockRegistry should NOT be satisfied 1" $ do
             Test.Tasty.HUnit.assertBool ("Packages are satisfied with " ++ show eitherResult) $
               case eitherResult of
@@ -311,7 +312,7 @@ unsolvableUnitTests =
                     Map.fromList
                       []
                 ]
-          eitherResult = runMockSolver (PurusPkg.Solver.solver package) mockRegistry
+          eitherResult = runSolverMock (PurusPkg.Solver.solver package) mockRegistry
        in Test.Tasty.HUnit.testCase "Package and MockRegistry should NOT be satisfied 2" $ do
             Test.Tasty.HUnit.assertBool ("Packages are satisfied with " ++ show eitherResult) $
               case eitherResult of
@@ -354,7 +355,7 @@ unsolvableUnitTests =
                     Map.fromList
                       []
                 ]
-          eitherResult = runMockSolver (PurusPkg.Solver.solver package) mockRegistry
+          eitherResult = runSolverMock (PurusPkg.Solver.solver package) mockRegistry
        in Test.Tasty.HUnit.testCase "Package and MockRegistry should NOT be satisfied 3" $ do
             Test.Tasty.HUnit.assertBool ("Packages are satisfied with " ++ show eitherResult) $
               case eitherResult of

@@ -1,4 +1,5 @@
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 {- | Module: PurusPkg.Solver
@@ -7,7 +8,16 @@
  Provides functionality and types for solving the version constraints, along
  with creating the final aggregated collection of the solved versions' sources.
 -}
-module PurusPkg.Solver (solver, MonadSolver (queryPackage, querySatisfyingVersions), SolverIO, runSolverIO, createPurusModules, purusModulesDirectory, NoSatisfyingVersion) where
+module PurusPkg.Solver (
+  solver,
+  MonadSolver (queryPackage, querySatisfyingVersions),
+  SolverT (..),
+  SolverIO (..),
+  runSolverIO,
+  createPurusModules,
+  purusModulesDirectory,
+  NoSatisfyingVersion,
+) where
 
 import PurusPkg.Package (Package (pDependencies), Version, VersionConstraint)
 import PurusPkg.Package qualified as Package
@@ -52,20 +62,56 @@ parameterized.
 In particular, 'querySatisfyingVersions' returns all the satisfying versions
 of a name and set of 'VersionConstraint', and 'queryPackage' must return the
 'Package' corresponding to a name and version.
+
+Laws:
+
+For every @name :: 'Text'@, and set of version constraints
+@versionConstraints :: 'Set' 'VersionConstraint'@ ,
+and every pair @(candidateName, candidateVersion)@ in
+@'querySatisfyingVersions' name versionConstraints@
+
+we must have
+
+- @name == candidateName@
+
+- @'PurusPkg.Package.versionSatisfiesVersionConstraints' candidateVersion versionConstraints == True@
+
+- Let @pkg@ be the package from @'queryPackage' candidateName candidateVersion@
+  (if it exists), then
+
+  > 'PurusPkg.Package.pName' pkg == candidateName@ and @'PurusPkg.Package.pVersion' pkg == candidateVersion}
+
+In other words, @'querySatisfyingVersions' name versionConstraints@ should
+return a set of name version pairs which have the same name provided, and
+satisfy all version constraints provided; and for each name version pair,
+@'queryPackage'@ should return a package with the same name and version (if
+such a package exists).
 -}
 class (MonadError NoSatisfyingVersion m) => MonadSolver m where
   queryPackage :: Text -> Version -> m Package
   querySatisfyingVersions :: Text -> Set VersionConstraint -> m (Set (Text, Down Version))
 
--- | An instance of 'MonadSolver' using 'PurusPkg.Registries'
-newtype SolverIO a = SolverIO (ReaderT Registries (ExceptT NoSatisfyingVersion IO) a)
-  deriving newtype (Functor, Applicative, Monad, MonadReader Registries, MonadError NoSatisfyingVersion, MonadIO)
+{- | Monad transformer for 'MonadSolver' which provides
+
+ - a generic environment to implement 'queryPackage', and
+   'querySatisfyingVersions' (with 'ReaderT')
+
+ - an 'ExceptT' monad which throws 'NoSatisfyingVersion' to allow the solver
+   to "realize" that the chosen dependencies so far don't work.
+-}
+newtype SolverT r m a = SolverT (ReaderT r (ExceptT NoSatisfyingVersion m) a)
+  deriving newtype (Functor, Applicative, Monad, MonadReader r, MonadError NoSatisfyingVersion)
+
+-- | Solver using 'Registries' with 'IO'
+newtype SolverIO a = SolverIO (SolverT Registries IO a)
+  deriving newtype (Functor, Applicative, Monad, MonadReader Registries, MonadError NoSatisfyingVersion)
+  deriving (MonadIO) via (ReaderT Registries (ExceptT NoSatisfyingVersion IO))
 
 {- |  Unwraps a 'SolverIO' to the underlying 'IO' monad -- throwing an exception
 in the case that the solver could not find a satisfying version.
 -}
 runSolverIO :: SolverIO a -> Registries -> IO a
-runSolverIO (SolverIO readerExceptIO) registries = do
+runSolverIO (SolverIO (SolverT readerExceptIO)) registries = do
   let exceptIO = Reader.runReaderT readerExceptIO registries
   eitherResult <- Except.runExceptT exceptIO
   case eitherResult of
