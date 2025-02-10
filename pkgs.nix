@@ -12,7 +12,9 @@
         overlays = [
           inputs.haskell-nix.overlay
 
-          (_self: _super: { inherit (inputs.purus.packages.${system}) purus; })
+          (_self: _super: {
+            inherit (inputs.purus.packages.${system}) purus purs;
+          })
 
           # inputs.iohk-nix.overlays.crypto
           # inputs.iohk-nix.overlays.haskell-nix-crypto

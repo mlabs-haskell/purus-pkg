@@ -22,6 +22,9 @@ tests =
     [ Test.Tasty.QuickCheck.testProperty "Roundtrip tests: Package --> JSON --> Package" $
         Test.Tasty.QuickCheck.forAll genPackage $
           \pkg -> Right pkg Test.Tasty.QuickCheck.=== Aeson.eitherDecode' (Aeson.encode pkg)
+    , Test.Tasty.QuickCheck.testProperty "Encoding / toJSON tests: Package --> JSON --> ByteString === Package --> ByteString" $
+        Test.Tasty.QuickCheck.forAll genPackage $
+          \pkg -> Aeson.encode (Aeson.toJSON pkg) Test.Tasty.QuickCheck.=== Aeson.encode pkg
     ]
 
 genPackage :: Gen Package

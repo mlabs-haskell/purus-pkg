@@ -1,0 +1,92 @@
+cabal-version:      3.0
+name:               purus-pkg
+version:            0.1.0.0
+
+synopsis: A package manager for purus
+
+description: A package manager for purus
+
+license:            BSD-3-Clause
+
+license-file:       LICENSE
+
+author:             Jared Pon
+
+maintainer:         jared@mlabs.city
+
+-- copyright:
+build-type:         Simple
+
+extra-doc-files:    CHANGELOG.md
+
+common warnings
+    ghc-options: -Wall -Werror
+
+library
+    import:           warnings
+
+    exposed-modules:
+        PurusPkg
+        PurusPkg.Package
+        PurusPkg.Registries
+        PurusPkg.Logger
+        PurusPkg.Solver
+        PurusPkg.Cli
+
+    build-depends:    
+        base,
+        aeson,
+        text,
+        containers,
+        bytestring,
+        directory,
+        filepath,
+        semver,
+        directory,
+        process,
+        mtl,
+        optparse-applicative,
+
+    hs-source-dirs:   src
+
+    default-language: GHC2021
+
+executable purus-pkg
+    import:           warnings
+
+    main-is:          Main.hs
+
+    build-depends:
+        base,
+        purus-pkg
+
+    hs-source-dirs:   app
+
+    default-language: GHC2021
+
+test-suite purus-pkg-test
+    import:           warnings
+
+    default-language: GHC2021
+
+    other-modules:
+        PurusPkg.Package.Test
+        PurusPkg.Solver.Test
+
+    type:             exitcode-stdio-1.0
+
+    hs-source-dirs:   test
+
+    main-is:          Main.hs
+
+    build-depends:
+        base,
+        purus-pkg,
+        aeson,
+        text,
+        semver,
+        containers,
+        tasty,
+        tasty-quickcheck,
+        tasty-hunit,
+        mtl,

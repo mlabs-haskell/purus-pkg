@@ -30,9 +30,15 @@
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        ./purus-pkg.nix
+        # Executables, testsuites, etc.
+        ./build.nix
+        ./apps/build.nix
+        ./testsuites/build.nix
 
+        # Code quality
         ./pre-commit.nix
+
+        # Modifying the `pkgs`
         ./pkgs.nix
       ];
       systems = [ "x86_64-linux" ];

@@ -1,0 +1,72 @@
+cabal-version:      3.0
+
+name:               purus-pkg-local-registry
+
+version:            0.1.0.0
+
+synopsis: A tool to help create a local registry for purus-pkg
+
+description: A tool to help create a local registry for purus-pkg
+
+license:            BSD-3-Clause
+
+license-file:       LICENSE
+
+author:             Jared Pon
+
+maintainer:         jared@mlabs.city
+
+build-type:         Simple
+
+extra-doc-files:    CHANGELOG.md
+
+common warnings
+    ghc-options: -Wall -Werror
+
+library
+    import:           warnings
+
+    exposed-modules: 
+        PurusPkg.LocalRegistry
+        PurusPkg.LocalRegistry.Cli
+
+    build-depends:    
+        base ^>=4.18.2.1,
+        purus-pkg,
+        optparse-applicative,
+        containers,
+        bytestring,
+        aeson,
+        filepath,
+
+    hs-source-dirs:   src
+
+    default-language: GHC2021
+
+executable purus-pkg-local-registry
+    import:           warnings
+
+    main-is:          Main.hs
+
+    build-depends:
+        base ^>=4.18.2.1,
+        purus-pkg-local-registry
+
+    hs-source-dirs:   app
+
+    default-language: GHC2021
+
+test-suite purus-pkg-local-registry-test
+    import:           warnings
+
+    default-language: GHC2021
+
+    type:             exitcode-stdio-1.0
+
+    hs-source-dirs:   test
+
+    main-is:          Main.hs
+
+    build-depends:
+        base ^>=4.18.2.1,
+        purus-pkg-local-registry

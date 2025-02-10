@@ -1,4 +1,4 @@
-packages: .
+packages: ./purus-pkg ./purus-pkg-local-registry
 
 -- NOTE(jaredponn) February 1, 2025: package for semantic versioning on git has
 -- more features than the same version uploaded on Hackage seems 

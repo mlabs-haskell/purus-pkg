@@ -25,3 +25,6 @@ cabal.project.local~
 
 # Nix tool .gitignore
 .pre-commit-config.yaml
+
+# ignores for the template
+templates/default/flake.lock
