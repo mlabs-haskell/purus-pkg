@@ -50,6 +50,8 @@ instance Aeson.ToJSON Package where
       , "dependencies" Aeson..= pDependencies package
       ]
 
+  toEncoding package = Aeson.pairs ("dependencies" Aeson..= pDependencies package <> "name" Aeson..= pName package <> "version" Aeson..= pVersion package)
+
 newtype Version = Version SemVer.Version
   deriving newtype (Eq, Ord, Show)
 
@@ -61,6 +63,8 @@ versionFromText = Coerce.coerce . SemVer.fromText
 
 instance Aeson.ToJSON Version where
   toJSON = Aeson.toJSON . versionToText
+
+  toEncoding = Aeson.toEncoding . versionToText
 
 instance Aeson.FromJSON Version where
   parseJSON =
@@ -95,6 +99,8 @@ versionConstraintFromText = Coerce.coerce . SemVer.Constraint.fromText
 
 instance Aeson.ToJSON VersionConstraint where
   toJSON = Aeson.toJSON . versionConstraintToText
+
+  toEncoding = Aeson.toEncoding . versionConstraintToText
 
 instance Aeson.FromJSON VersionConstraint where
   parseJSON =
