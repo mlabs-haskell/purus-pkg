@@ -32,11 +32,12 @@ import Data.Maybe qualified as Maybe
 import Data.Ord (Down (Down))
 import Data.Set (Set)
 import Data.Set qualified as Set
+import Data.Text (Text)
 import Data.Text qualified as Text
 
 import Data.SemVer qualified as SemVer
 import PurusPkg.Logger qualified as Logger
-import PurusPkg.Package (Name, Package, Version (Version), VersionConstraint)
+import PurusPkg.Package (Package, Version (Version), VersionConstraint)
 import PurusPkg.Package qualified as Package
 
 import GHC.Generics (Generic)
@@ -46,7 +47,7 @@ in the topmost registry going downwards until it doesn't exist
 -}
 newtype Registries = Registries {getRegistries :: [Registry]}
 
-data RegistryBadLookup = RegistryBadLookup {rblName :: Name, rblVersion :: Version, rblMessage :: String}
+data RegistryBadLookup = RegistryBadLookup {rblName :: Text, rblVersion :: Version, rblMessage :: String}
   deriving stock (Eq, Ord, Show)
 
 instance Exception RegistryBadLookup where
@@ -66,10 +67,10 @@ foldrRegistries f acc registries = foldr f acc $ getRegistries registries
 packageFilePath :: FilePath
 packageFilePath = "package.json"
 
-{- | Given a 'Registry', 'Name', and 'Version', this queries the corresponding
+{- | Given a 'Registry', 'Text' (name), and 'Version', this queries the corresponding
 'Package'.
 -}
-queryRegistriesPackage :: Registries -> Name -> Version -> IO Package
+queryRegistriesPackage :: Registries -> Text -> Version -> IO Package
 queryRegistriesPackage registries name version =
   let
     -- template for errors
@@ -94,11 +95,11 @@ queryRegistriesPackage registries name version =
    in
     foldrRegistries go notFound registries
 
-{- | Given a 'Registry', 'Name', 'Version', and 'FilePath'; this will copy the
-sources corresponding to the 'Name' and 'Version' into the provided
+{- | Given a 'Registry', 'Text' (name), 'Version', and 'FilePath'; this will copy the
+sources corresponding to the 'Text' (name) and 'Version' into the provided
 'FilePath'
 -}
-queryRegistriesPackageSources :: Registries -> Name -> Version -> FilePath -> IO ()
+queryRegistriesPackageSources :: Registries -> Text -> Version -> FilePath -> IO ()
 queryRegistriesPackageSources registries name version destination =
   let
     -- template for errors
@@ -127,10 +128,10 @@ queryRegistriesPackageSources registries name version destination =
 {- | 'querySatisfyingVersions' queries all the available versions in the registry
 satisfying the given version constraints
 -}
-queryRegistriesSatisfyingVersions :: Registries -> Name -> Set VersionConstraint -> IO (Set (Name, Down Version))
+queryRegistriesSatisfyingVersions :: Registries -> Text -> Set VersionConstraint -> IO (Set (Text, Down Version))
 queryRegistriesSatisfyingVersions registries name versionConstraints =
   let
-    go :: Registry -> IO (Set (Name, Down Version)) -> IO (Set (Name, Down Version))
+    go :: Registry -> IO (Set (Text, Down Version)) -> IO (Set (Text, Down Version))
     go registry acc = case registry of
       LocalRegistry {lrMapping = LocalRegistryMapping localRegistryMapping} -> do
         let
@@ -187,7 +188,7 @@ data Registry = LocalRegistry {lrFilePath :: FilePath, lrMapping :: LocalRegistr
 instance Aeson.ToJSON Registry
 instance Aeson.FromJSON Registry
 
-newtype LocalRegistryMapping = LocalRegistryMapping {getLocalRegistryMapping :: Map (Name, Version) LocalRegistryReference}
+newtype LocalRegistryMapping = LocalRegistryMapping {getLocalRegistryMapping :: Map (Text, Version) LocalRegistryReference}
   deriving newtype (Aeson.ToJSON, Aeson.FromJSON)
 
 -- | A reference to how one can get a package

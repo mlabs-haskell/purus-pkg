@@ -3,6 +3,7 @@
 
 module PurusPkg.Solver.Test where
 
+import Control.Exception qualified as Exception
 import Data.Coerce qualified as Coerce
 import Data.Map (Map)
 import Data.Map qualified as Map
@@ -13,8 +14,7 @@ import Test.Tasty (TestTree)
 import Test.Tasty qualified
 import Test.Tasty.HUnit qualified
 
-import Control.Exception qualified as Exception
-import PurusPkg.Package (Name, Package (Package, pDependencies, pName, pVersion), Version (Version), VersionConstraint (VersionConstraint))
+import PurusPkg.Package (Package (Package, pDependencies, pName, pVersion), Version (Version), VersionConstraint (VersionConstraint))
 import PurusPkg.Package qualified
 import PurusPkg.Solver (MonadSolver, NoSatisfyingVersion)
 import PurusPkg.Solver qualified
@@ -26,13 +26,14 @@ import Control.Monad.Reader qualified as Reader
 
 import Data.SemVer qualified as SemVer
 import Data.SemVer.Constraint qualified as SemVer.Constraint
+import Data.Text (Text)
 
 -- | A mock data type for the registry for 'MockSolver'
-newtype MockRegistry = MockRegistry {getMockRegistry :: Map (Name, Version) Package}
+newtype MockRegistry = MockRegistry {getMockRegistry :: Map (Text, Version) Package}
   deriving newtype (Show, Eq)
 
 -- | Helper for making key value pairs of the 'MockRegistry'
-makeMockRegistryPackage :: Name -> Version -> Map Name VersionConstraint -> ((Name, Version), Package)
+makeMockRegistryPackage :: Text -> Version -> Map Text VersionConstraint -> ((Text, Version), Package)
 makeMockRegistryPackage name version dependencies =
   ( (name, version)
   , Package {pName = name, pVersion = version, pDependencies = dependencies}
@@ -74,7 +75,7 @@ instance MonadSolver MockSolver where
 names to versions) satisfies all version constraints of the package and all
 dependencies
 -}
-checkDependencies :: Map Name Version -> Package -> MockRegistry -> Bool
+checkDependencies :: Map Text Version -> Package -> MockRegistry -> Bool
 checkDependencies dependencies package mockRegistry =
   let
     arePackageDependenciesSatisfied :: Package -> Bool

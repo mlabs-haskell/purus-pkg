@@ -9,7 +9,7 @@
 -}
 module PurusPkg.Solver (solver, MonadSolver (queryPackage, querySatisfyingVersions), SolverIO, runSolverIO, createPurusModules, purusModulesDirectory, NoSatisfyingVersion) where
 
-import PurusPkg.Package (Name, Package (pDependencies), Version, VersionConstraint)
+import PurusPkg.Package (Package (pDependencies), Version, VersionConstraint)
 import PurusPkg.Package qualified as Package
 import PurusPkg.Registries (Registries)
 import PurusPkg.Registries qualified as Registries
@@ -26,6 +26,7 @@ import Data.Map qualified as Map
 import Data.Ord (Down (getDown))
 import Data.Set (Set)
 import Data.Set qualified as Set
+import Data.Text (Text)
 import Data.Text qualified as Text
 
 import Control.Monad.Except (ExceptT, MonadError)
@@ -35,7 +36,7 @@ import Control.Monad.Reader (MonadReader, ReaderT)
 import Control.Monad.Reader qualified as Reader
 
 -- | Error for 'MonadSolver'
-data NoSatisfyingVersion = NoSatisfyingVersion {nvName :: Name, nvConstraints :: [VersionConstraint]}
+data NoSatisfyingVersion = NoSatisfyingVersion {nvName :: Text, nvConstraints :: [VersionConstraint]}
   deriving stock (Eq, Show)
 
 instance Exception NoSatisfyingVersion where
@@ -53,8 +54,8 @@ of a name and set of 'VersionConstraint', and 'queryPackage' must return the
 'Package' corresponding to a name and version.
 -}
 class (MonadError NoSatisfyingVersion m) => MonadSolver m where
-  queryPackage :: Name -> Version -> m Package
-  querySatisfyingVersions :: Name -> Set VersionConstraint -> m (Set (Name, Down Version))
+  queryPackage :: Text -> Version -> m Package
+  querySatisfyingVersions :: Text -> Set VersionConstraint -> m (Set (Text, Down Version))
 
 -- | An instance of 'MonadSolver' using 'PurusPkg.Registries'
 newtype SolverIO a = SolverIO (ReaderT Registries (ExceptT NoSatisfyingVersion IO) a)
@@ -80,7 +81,7 @@ instance MonadSolver SolverIO where
     registries <- Reader.ask
     Reader.liftIO $ Registries.queryRegistriesSatisfyingVersions registries name versionConstraints
 
-solver :: (MonadSolver m) => Package -> m (Map Name Version)
+solver :: (MonadSolver m) => Package -> m (Map Text Version)
 solver package = do
   let
     -- NOTE(jaredponn): this is NP complete, so it's reasonable to believe
@@ -135,7 +136,7 @@ solver package = do
     --
     -- TODO(jaredponn): do some sort of heuristics to make this faster..
     -- its the best we can do
-    go :: (MonadSolver m) => Map Name Version -> Map Name (Set VersionConstraint) -> m (Map Name Version)
+    go :: (MonadSolver m) => Map Text Version -> Map Text (Set VersionConstraint) -> m (Map Text Version)
     go satisfyingVersions dependenciesToSatisfy =
       -- Either we have
       --    1. no dependencies left to satisfy, so we're done
@@ -202,7 +203,7 @@ solver package = do
 purusModulesDirectory :: FilePath
 purusModulesDirectory = "purus-modules"
 
-createPurusModules :: Map Name Version -> Registries -> IO ()
+createPurusModules :: Map Text Version -> Registries -> IO ()
 createPurusModules dependencies registries = do
   Directory.createDirectoryIfMissing True purusModulesDirectory
   Directory.withCurrentDirectory purusModulesDirectory $

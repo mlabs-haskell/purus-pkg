@@ -8,7 +8,6 @@ Exposes the package type and related functionality
 -}
 module PurusPkg.Package (
   Package (..),
-  Name,
   Version (..),
   VersionConstraint (..),
   versionToText,
@@ -27,14 +26,11 @@ import Data.Coerce qualified as Coerce
 import Data.SemVer qualified as SemVer
 import Data.SemVer.Constraint qualified as SemVer.Constraint
 
--- | 'Name' is the name of a package (just to serve as documentation)
-type Name = Text
-
 -- | 'Package' type which defines a package
 data Package = Package
-  { pName :: Name
+  { pName :: Text
   , pVersion :: Version
-  , pDependencies :: Map Name VersionConstraint
+  , pDependencies :: Map Text VersionConstraint
   }
   deriving stock (Eq, Show)
 
