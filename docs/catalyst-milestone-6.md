@@ -13,8 +13,8 @@ Milestone outputs:
 - [x] Modified Spago (PureScript package manager) is made available to build Purus-based projects. Alternatively, an entirely new tool is available for the same purpose.
 
   - An entirely new tool,
-    [purus-pkg](https://github.com/mlabs-haskell/purus-pkg/tree/master), is
-    available to build Purus-based projects.
+    [purus-pkg](https://github.com/mlabs-haskell/purus-pkg/), is available to
+    build Purus-based projects.
 
 Acceptance criteria:
 
@@ -27,7 +27,7 @@ Acceptance criteria:
 
 - [x] A bundler is provided, which can be used to build the UPLC binary from the source code with one command.
 
-  - [purus-pkg](https://github.com/mlabs-haskell/purus-pkg/tree/master) serves
+  - [purus-pkg](https://github.com/mlabs-haskell/purus-pkg/) serves
     as a bundler which can build the UPLC binary from the source code.
 
 Evidence of milestone completion:
