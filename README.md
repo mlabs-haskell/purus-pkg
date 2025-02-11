@@ -65,7 +65,8 @@ the compilation to UPLC.
 - `purus-pkg install` will find satisfying versions (from the provided
   registries) and install the versions in the `purus-modules/` folder.
 
-- `purus-pkg build` will call `purus purus-modules/` to compile the project.
+- `purus-pkg build` will call `purus purus-modules/` to compile the project
+  where the executable `purus` compiles the project in the provided directory.
 
 ### Registries
 
