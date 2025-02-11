@@ -1593,16 +1593,15 @@
         "pre-commit-hooks-nix": "pre-commit-hooks-nix"
       },
       "locked": {
-        "lastModified": 1738387308,
-        "narHash": "sha256-CEJyLFgNDS8RwelfH4JRiDrwNL0krTRGkCi13R23HNw=",
+        "lastModified": 1739237404,
+        "narHash": "sha256-YvSXAsI2I1sw+tpv7cwkJG/eKyJBQDdYcUiD6xdZ7V4=",
         "owner": "mlabs-haskell",
         "repo": "purus",
-        "rev": "8bd61f81984e54e6bd8c085210143e9cba2e2b3c",
+        "rev": "f4d50126ecccb92cf4d939f0c0a18dc5294c4692",
         "type": "github"
       },
       "original": {
         "owner": "mlabs-haskell",
-        "ref": "jaredponn/create-purus-flake-output",
         "repo": "purus",
         "type": "github"
       }

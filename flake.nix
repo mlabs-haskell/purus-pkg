@@ -14,26 +14,17 @@
     haskell-nix.url = "github:input-output-hk/haskell.nix";
 
     # purus
-    purus.url =
-      "github:mlabs-haskell/purus?ref=jaredponn/create-purus-flake-output";
-
-    # # Crypto overlays necessary for Plutus
-    # iohk-nix.url = "github:input-output-hk/iohk-nix";
-    # iohk-nix.inputs.nixpkgs.follows = "haskell-nix/nixpkgs";
-
-    # # Cardano Haskell packages
-    # cardano-haskell-packages.url =
-    #   "github:IntersectMBO/cardano-haskell-packages?ref=repo";
-    # cardano-haskell-packages.flake = false;
+    purus.url = "github:mlabs-haskell/purus";
   };
 
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        # Executables, testsuites, etc.
+        # Executables, testsuites, templates, etc.
         ./build.nix
         ./apps/build.nix
         ./testsuites/build.nix
+        ./templates/build.nix
 
         # Code quality
         ./pre-commit.nix

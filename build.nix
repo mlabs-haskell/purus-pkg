@@ -6,9 +6,6 @@
         src = ./.;
         compiler-nix-name = "ghc966";
 
-        # inputMap."https://chap.intersectmbo.org/" =
-        #   "${inputs.cardano-haskell-packages}";
-
         shell = {
           tools = {
             cabal = { };
