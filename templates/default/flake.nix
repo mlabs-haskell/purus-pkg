@@ -3,8 +3,7 @@
 
   inputs = {
     nixpkgs.follows = "purus-pkg/nixpkgs";
-    purus-pkg.url =
-      "git+ssh://git@github.com/mlabs-haskell/purus-pkg?ref=jaredponn/initial-implementation";
+    purus-pkg.url = "github:mlabs-haskell/purus-pkg";
   };
 
   outputs = { nixpkgs, purus-pkg, ... }:
