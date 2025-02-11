@@ -44,10 +44,10 @@ case, one can tighten the version constraints to reduce the search time.
 An easy way to get started is to use the flake template provided by this
 project. Here's how to start a new project using the template:
 
-```
-mkdir myproject
-cd myproject
-nix flake init --template github:mlabs-haskell/purus-pkg
+```bash
+$ mkdir myproject
+$ cd myproject
+$ nix flake init --template github:mlabs-haskell/purus-pkg
 ```
 
 Notice that this requires Nix, for an introduction to the Nix ecosystem, check
