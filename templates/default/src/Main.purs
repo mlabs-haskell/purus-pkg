@@ -2,8 +2,7 @@ module Main where
 
 import Prelude
 
--- main :: Int -> Int -> Boolean
--- main a b = Builtin.equalsInteger (Builtin.addInteger a b) 3
+-- `main` will be the script that is compiled to UPLC
+main :: Int -> Int -> Builtin.BuiltinData -> Builtin.BuiltinData -> Boolean 
+main a b _scriptContext _redeemer = a + b == 3
 
-main :: Int -> Int -> Boolean
-main a b = a + b == 3
