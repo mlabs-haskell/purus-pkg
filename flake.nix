@@ -20,10 +20,11 @@
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        # Executables, testsuites, etc.
+        # Executables, testsuites, templates, etc.
         ./build.nix
         ./apps/build.nix
         ./testsuites/build.nix
+        ./templates/build.nix
 
         # Code quality
         ./pre-commit.nix
