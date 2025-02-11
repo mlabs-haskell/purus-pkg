@@ -2,9 +2,9 @@
 
 Milestone outputs:
 
-- [x] Reusable project template (including a demo)
+- [x] Reusable project template (including a demo).
 
-  - A reusable project template is provided here <https://github.com/mlabs-haskell/purus-pkg/tree/master/templates/default>
+  - A reusable project template is provided here <https://github.com/mlabs-haskell/purus-pkg/tree/master/templates/default>.
 
   - The
     [README.md](https://github.com/mlabs-haskell/purus-pkg/blob/master/README.md)
@@ -18,7 +18,7 @@ Milestone outputs:
 
 Acceptance criteria:
 
-- [x] A template can be instantiated and an example validator script can be compiled successfully
+- [x] A template can be instantiated and an example validator script can be compiled successfully.
 
   - The project template provided here
     <https://github.com/mlabs-haskell/purus-pkg/tree/master/templates/default>
@@ -28,8 +28,7 @@ Acceptance criteria:
 - [x] A bundler is provided, which can be used to build the UPLC binary from the source code with one command.
 
   - [purus-pkg](https://github.com/mlabs-haskell/purus-pkg/tree/master) serves
-    as a bundler which can build the UPLC binary from the source code with one
-    command
+    as a bundler which can build the UPLC binary from the source code.
 
 Evidence of milestone completion:
 
@@ -42,17 +41,17 @@ Evidence of milestone completion:
     Namely, this commit includes the implementation of purus-pkg (the package
     manager and bundler for Purus) along with a project template.
 
-  - A video demo to demonstrate the process of building UPLC binary can be found here <https://youtu.be/KxYRDXAH8cg>
+  - A video demo to demonstrate the process of building UPLC binary can be found here <https://youtu.be/KxYRDXAH8cg>.
 
 - [x] We will demonstrate how Purus can be used to produce a working UPLC
   binary from source code. Video will be provided.
 
   - The video demonstration to show how Purus can be used to produce UPLC from
-    source code can be found here <https://youtu.be/KxYRDXAH8cg>
+    source code can be found here <https://youtu.be/KxYRDXAH8cg>.
 
 ## References
 
-- Purus milestone 6: <https://milestones.projectcatalyst.io/projects/1000123/milestones/6>
+- Purus milestone 6: <https://milestones.projectcatalyst.io/projects/1000123/milestones/6>.
 
-- Demo video: <https://youtu.be/KxYRDXAH8cg>
+- Demo video: <https://youtu.be/KxYRDXAH8cg>.
 
