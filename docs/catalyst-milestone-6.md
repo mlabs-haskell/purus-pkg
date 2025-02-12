@@ -53,5 +53,7 @@ Evidence of milestone completion:
 
 - Purus milestone 6: <https://milestones.projectcatalyst.io/projects/1000123/milestones/6>.
 
-- Demo video: <https://youtu.be/KxYRDXAH8cg>.
+- Closeout video: <https://youtu.be/KxYRDXAH8cg>.
+
+- Closeout report: <https://drive.google.com/file/d/11xjh_32SWhnW-nSE1ckcOoDx66yzhzg-/view?usp=sharing>. 
 
