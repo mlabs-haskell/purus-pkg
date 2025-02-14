@@ -15,9 +15,6 @@
           (_self: _super: {
             inherit (inputs.purus.packages.${system}) purus purs;
           })
-
-          # inputs.iohk-nix.overlays.crypto
-          # inputs.iohk-nix.overlays.haskell-nix-crypto
         ];
       };
     };
